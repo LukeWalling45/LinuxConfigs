@@ -5,10 +5,39 @@ vim.opt.shiftwidth = 4
 vim.opt.softtabstop = 4
 vim.opt.expandtab = true
 
+-- Automatic language-specific indentation
+vim.opt.autoindent = true
+vim.cmd("filetype plugin indent on")
+
 vim.opt.termguicolors = true
 
 --vim.cmd.colorscheme("desert")
 vim.cmd.colorscheme("habamax")
+
+-- Diagnostic underline colors
+vim.api.nvim_set_hl(0, "DiagnosticUnderlineError", {
+    undercurl = true,
+    sp = "#FF5555",  -- Red
+})
+
+vim.api.nvim_set_hl(0, "DiagnosticUnderlineWarn", {
+    undercurl = true,
+    sp = "#FFCC00",  -- Yellow
+})
+
+vim.api.nvim_set_hl(0, "DiagnosticUnderlineInfo", {
+    undercurl = true,
+    sp = "#55AAFF",  -- Blue
+})
+
+vim.api.nvim_set_hl(0, "DiagnosticUnderlineHint", {
+    undercurl = true,
+    sp = "#55CCAA",  -- Green
+})
+
+vim.diagnostic.config({
+    severity_sort = true,
+})
 
 vim.opt.statusline = "%f  %h%m%r%=Line %l/%L Col %c  %P"
 
