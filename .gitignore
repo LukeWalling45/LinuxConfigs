@@ -1,0 +1,4 @@
+# Large LSP binaries (distributed separately)
+opt/nvim/lsp/servers/packages/clangd/clangd_23.1.0/bin/clangd
+opt/nvim/lsp/servers/packages/basedpyright/venv/lib/python3.11/site-packages/nodejs_wheel/bin/node
+opt/nvim/lsp/runtimes/node/bin/node

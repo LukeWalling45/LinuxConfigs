@@ -1,0 +1,3 @@
+#!/bin/sh
+
+LUAROCKS_SYSCONFDIR='/etc/luarocks' exec '/usr/bin/lua' -e 'package.path="/home/lwalling/mason-build/servers/packages/luacheck/share/lua/5.3/?.lua;/home/lwalling/mason-build/servers/packages/luacheck/share/lua/5.3/?/init.lua;"..package.path;package.cpath="/home/lwalling/mason-build/servers/packages/luacheck/lib64/lua/5.3/?.so;"..package.cpath;local k,l,_=pcall(require,"luarocks.loader") _=k and l.add_context("luacheck","1.1.0-1")' '/home/lwalling/mason-build/servers/packages/luacheck/lib/luarocks/rocks-5.3/luacheck/1.1.0-1/bin/luacheck' "$@"
