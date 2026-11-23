@@ -1,219 +1,85 @@
 # LinuxConfigs
 
-Portable Neovim, language server, and tmux configurations for offline Rocky Linux development environments.
+Offline installation of Neovim plugins, language servers, and tmux configuration for Rocky Linux.
 
-The goal is to provide a consistent development environment across multiple machines without requiring users to download plugins or language servers individually.
+Run all commands from the root of this repository.
 
-## Repository Structure
+## 1. Extract Large Binaries
 
-```text
-LinuxConfigs/
-├── .tmux.conf
-├── .zshrc
-├── config/
-│   ├── nvim/
-│   │   ├── init.lua
-│   │   └── pack/
-│   │       └── lab/
-│   │           └── start/
-│   └── tmux_active_color.py
-└── opt/
-    ├── nvim/
-    │   └── lsp/
-    │       ├── lsp.lua
-    │       ├── servers/
-    │       └── runtimes/
-    └── test.sh
+Three executables are stored as ZIP files to accommodate GitHub's file-size limits. Extract them in their existing directories.
+
+```bash
+(cd opt/nvim/lsp/servers/packages/clangd/clangd_23.1.0/bin && unzip -o clangd.zip)
+(cd opt/nvim/lsp/runtimes/node/bin && unzip -o node.zip)
+(cd opt/nvim/lsp/servers/packages/basedpyright/venv/lib/python3.11/site-packages/nodejs_wheel/bin && unzip -o node.zip)
 ```
 
-Neovim itself is installed separately under `/opt/nvim`.
+## 2. Install Configurations
 
-## Requirements
+```bash
+mkdir -p ~/.config/nvim
+cp -a config/nvim/. ~/.config/nvim/
 
-- Rocky Linux 8/9 or a compatible Linux environment
-- Neovim 0.12.6
-- tmux 3.2a
-- Python 3.6 or newer for tmux color detection
-- GNOME Terminal with GSettings for automatic tmux highlighting
-- Required language server runtimes installed or provided by the bundled environment
-
-The editor configuration is designed for offline use. Plugin files and language server packages are maintained locally rather than downloaded by Neovim at startup.
-
-## Installation
-
-Copy the repository configuration files to their corresponding locations:
-
-| Repository | Destination |
-|---|---|
-| `config/nvim/` | `~/.config/nvim/` |
-| `config/tmux_active_color.py` | `~/.config/tmux_active_color.py` |
-| `.tmux.conf` | `~/.tmux.conf` |
-| `opt/nvim/lsp/` | `/opt/nvim/lsp/` |
-
-Install or copy the Neovim executable to `/opt/nvim` separately.
-
-Add `/opt/nvim/bin` to your `PATH` if it is not already available.
-
-The `.zshrc` file is optional and should not overwrite a user's existing shell configuration.
-
-Keep the bundled language server directory structure intact, including its executables, packages, runtime files, and symbolic links. Some language servers depend on system runtimes such as Python 3.11.
-
-Run `opt/test.sh` to perform the included environment checks, where applicable.
-
-## Neovim Configuration
-
-The main configuration is:
-
-```text
-~/.config/nvim/init.lua
+cp .tmux.conf ~/
+cp config/tmux_active_color.py ~/.config/
 ```
 
-Features include:
+The included `.zshrc` is optional. Users can retain their existing shell configurations.
 
-- Habamax colorscheme, with Desert retained as an alternative
-- Terminal-adaptive background highlighting
-- Relative line numbers and custom status column
-- Four-space indentation
-- Active split and current-line highlighting
-- Diagnostic underlines
-- Tree-sitter syntax highlighting
-- Language Server Protocol support
-- Autocomplete through blink.cmp
-- Git change indicators through gitsigns.nvim
-- Indentation guides through indent-blankline.nvim
+## 3. Install Language Servers
 
-Language servers are configured separately in:
+Neovim is expected to already be installed under `/opt/nvim`.
 
-```text
-/opt/nvim/lsp/lsp.lua
+```bash
+sudo mkdir -p /opt/nvim/lsp
+sudo cp -a opt/nvim/lsp/. /opt/nvim/lsp/
 ```
 
-### Terminal-Adaptive Colors
+Restore executable permissions if necessary:
 
-Neovim queries the terminal background using OSC 11 and calculates brighter colors for selected UI elements.
-
-Default adjustments:
-
-| Element | Adjustment |
-|---|---|
-| Inactive split | Terminal background |
-| Active split | +3% |
-| Current line | +6% |
-| Relative line-number text | +20% |
-
-The current line number uses a bright foreground color.
-
-Percentages are adjusted in `init.lua`:
-
-```lua
-local brightness = {
-    active = 0.03,
-    cursorline = 0.06,
-    linenumber = 0.20,
-}
+```bash
+sudo chmod +x /opt/nvim/lsp/servers/packages/clangd/clangd_23.1.0/bin/clangd
+sudo chmod +x /opt/nvim/lsp/runtimes/node/bin/node
+sudo chmod +x /opt/nvim/lsp/servers/packages/basedpyright/venv/lib/python3.11/site-packages/nodejs_wheel/bin/node
 ```
 
-The adjustment blends each RGB channel toward white, allowing the configuration to work with very dark backgrounds, including pure black.
+Some bundled language servers require system dependencies, including Python 3.11.
 
-If terminal background detection fails, the editor retains transparent background defaults.
+## 4. Verify Installation
 
-## tmux Configuration
-
-The main configuration is:
-
-```text
-~/.tmux.conf
+```bash
+nvim --version
+tmux -V
 ```
 
-Features include:
+Open Neovim and check language server status:
 
-- RGB terminal support
-- Mouse support
-- Vi-style copy mode
-- Pane and window numbering beginning at 1
-- Pane navigation integrated with Neovim
-- Pane resizing using `Prefix + h/j/k/l`
-- New panes opening in the current working directory
-- Active pane identification
-- Terminal-adaptive pane highlighting
-
-### Terminal-Adaptive Pane Highlighting
-
-tmux uses the terminal background for inactive panes and a background 3% brighter for the active pane.
-
-The configuration initializes both styles to the terminal default:
-
-```tmux
-set -g window-style 'bg=default'
-set -g window-active-style 'bg=default'
+```vim
+:checkhealth vim.lsp
 ```
 
-Two hooks initialize the active color when a session is created or a client attaches:
-
-```tmux
-set-hook -g session-created 'run-shell -b "python3 ~/.config/tmux_active_color.py"'
-set-hook -g client-attached 'run-shell -b "python3 ~/.config/tmux_active_color.py"'
-```
-
-The Python helper:
-
-```text
-~/.config/tmux_active_color.py
-```
-
-Reads the configured background color of the default GNOME Terminal profile using GSettings, applies the brightness adjustment, and updates tmux's `window-active-style`.
-
-To change the active pane brightness, edit:
-
-```python
-BRIGHTNESS = 0.03
-```
-
-tmux highlighting works independently of Neovim.
-
-**Limitations:** The helper currently supports GNOME Terminal's default profile, not arbitrary terminal emulators or nondefault profiles. It assumes that the profile has a configured background color rather than relying on system theme colors. tmux also shares global window styling across attached clients.
-
-## Reloading Configurations
-
-Reload tmux without restarting the server:
+## 5. Reload tmux
 
 ```bash
 tmux source-file ~/.tmux.conf
 ```
 
-Check the active pane color:
+The tmux configuration uses `~/.config/tmux_active_color.py` to detect the default GNOME Terminal profile's background color and apply a brighter active-pane background.
+
+Requires Python 3.6+ and GNOME Terminal with an explicitly configured background color.
+
+Verify the active pane color:
 
 ```bash
 tmux show -gwv window-active-style
 ```
 
-Restart Neovim after editing `init.lua`.
+## Notes
 
-For troubleshooting tmux color detection, run:
-
-```bash
-python3 ~/.config/tmux_active_color.py
-tmux show -gwv window-active-style
-```
-
-## Offline Deployment
-
-The environment is intended to be copied onto machines without internet access.
-
-- Copy Neovim and the required runtime files into `/opt/nvim`.
-- Copy the user configuration into `~/.config/nvim`.
-- Copy the tmux configuration and Python helper to their designated locations.
-- Preserve bundled plugin directories, language server packages, and executable permissions.
-- Verify that the required system runtimes and shared libraries are available.
-
-No online plugin manager or automatic package installation is required at Neovim startup.
-
-## Configuration Philosophy
-
-- Keep configuration centralized and understandable.
-- Avoid unnecessary dependencies.
-- Preserve each user's preferred terminal and shell configuration.
-- Use terminal-derived colors rather than hardcoded personal color schemes.
-- Keep language server and editor installations portable across machines.
-- Support offline development without requiring network access.
+- Designed for offline environments; no plugin downloads are required during startup.
+- Neovim plugins are installed under `~/.config/nvim/pack/lab/start/`.
+- Language servers are configured in `/opt/nvim/lsp/lsp.lua`.
+- Neovim highlighting automatically adapts to the terminal background.
+- tmux active-pane highlighting is initialized when sessions are created or clients attach.
+- Existing user shell settings do not need to be replaced.
 
